@@ -4,8 +4,11 @@
 from typing import Optional
 
 import fire
+import os
 
 from llama import Llama
+
+# os.environ['MASTER_PORT'] = '12345'
 
 
 def main(
