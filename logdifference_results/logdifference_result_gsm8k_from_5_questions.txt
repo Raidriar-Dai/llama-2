@@ -1,0 +1,22 @@
+[
+    {
+        "dataset_idx": 1458,
+        "log_difference": 5.646458625793457
+    },
+    {
+        "dataset_idx": 6312,
+        "log_difference": 1.5586180686950684
+    },
+    {
+        "dataset_idx": 5032,
+        "log_difference": 1.0764896869659424
+    },
+    {
+        "dataset_idx": 4833,
+        "log_difference": -0.15578126907348633
+    },
+    {
+        "dataset_idx": 3620,
+        "log_difference": -0.33922505378723145
+    }
+]

@@ -8,7 +8,43 @@ os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3,4,5,6,7"
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import sys
 import time
+from pathlib import Path
+from tqdm import tqdm
+import pdb
 
+def main():
+    args = arg_parser()
+    print('*****************************')
+    print(args)
+    print('*****************************')
+    
+    if args.output_dir:
+        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
+    
+    set_random_seed(args.random_seed)
+    
+    dataloader = create_dataloader(args)
+    
+    if args.dataset_size > 1000:
+        dataloader = dataloader[:1000] # only take 1000 questions as selection scope, randomness decided by seed
+    print(f"Dataloader size: {len(dataloader)}")
+
+    if args.qes_limit == 0:
+        args.qes_limit = len(dataloader)
+    
+    start = time.time()
+    result = create_logdifference(args, dataloader)
+    # pdb.set_trace() # check the content of result
+    end = time.time()
+    print('Total Execution Time: ', end - start, " seconds")
+    
+    # output the results
+    path = f"{args.output_dir}/logdifference_result_{args.dataset}_from_{args.qes_limit}_questions.txt"
+    with open(path, 'w') as f:
+        try:
+            f.write(json.dumps(result, indent=4))
+        except:
+            pass
 
 # set the random seed for reproducibility
 def set_random_seed(seed):
@@ -130,6 +166,7 @@ def load_data(args):
 # return a customized dataloader of batches
 # Not PyTorch dataloader, it supprts random index(slice) access
 def create_dataloader(args)->list:
+    '''返回的 dataloader 是一个以 dict 为元素的列表'''
     set_random_seed(args.random_seed)
     questions, answers = load_data(args)
     dataset = []
@@ -164,24 +201,22 @@ def create_input_prompt(args)->str:
     return prompt_text
 
 
-def generate_logprob_qes(args, qes, with_validation: bool):
+def generate_logprob_qes(args, qes, model, tokenizer, with_validation: bool):
     '''返回 logprob 标量值;
     TODO: 检查 output_path, 并把先前已经选出的 (x_0, y_0) 作为 context 接入 prompt.'''
     if with_validation:
         prompt_text = create_input_prompt(args)
         prompt_text += qes["question"] + "\nA: " + qes["answer"]    # No `.` after answer
-        logprob = calculate_logprob_ans(args.model, prompt_text)
+        logprob = calculate_logprob_ans(model, tokenizer, prompt_text)
     else:
         prompt_text = qes["question"] + "\nA: " + qes["answer"]
-        logprob = calculate_logprob_ans(args.model, prompt_text)
+        logprob = calculate_logprob_ans(model, tokenizer, prompt_text)
     
     return logprob
 
 
-def calculate_logprob_ans(model_path, input_prompt):
-    '''Given prompt and model_name, return log-probability of the answer in prompt.'''
-    model = AutoModelForCausalLM.from_pretrained(model_path, use_auth_token="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", device_map="auto") # 已经自动做了 device_map, 那就不需要 .to(device)
-    tokenizer = AutoTokenizer.from_pretrained(model_path, use_auth_token="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", trust_remote_code=True, use_fast=True)    # model_max_length=sys.maxsize
+def calculate_logprob_ans(model, tokenizer, input_prompt):
+    '''Given model object, tokenizer object and prompt, return log-probability of the answer in prompt.'''
     encodings = tokenizer(input_prompt, return_tensors="pt").to("cuda")
     input_ids = encodings["input_ids"]
     assert input_ids.numel() <= 4096, "input_prompt is too long for the model, should discard some contexts."
@@ -201,19 +236,21 @@ def calculate_logprob_ans(model_path, input_prompt):
 def create_logdifference(args, questions):
     '''The argument provided for `questions` is `dataloader`'''
     result = []
-    count = 0
+    model_path = args.model
+    if args.qes_limit > 0:
+        questions = questions[:args.qes_limit]
+    
+    model = AutoModelForCausalLM.from_pretrained(model_path, trust_remote_code=True, device_map="auto") # 已经自动做了 device_map, 那就不需要 .to(device)
+    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, use_fast=True)    # model_max_length=sys.maxsize
 
-    for qes in questions:
-        if count == args.qes_limit:
-            break
-        logprob_with_validation = generate_logprob_qes(args, qes, with_validation=True)
-        logprob = generate_logprob_qes(args, qes, with_validation=False)
-        log_difference = logprob_with_validation - logprob
+    for qes in tqdm(questions):
+        logprob_with_validation = generate_logprob_qes(args, qes=qes, model=model, tokenizer=tokenizer, with_validation=True)
+        logprob = generate_logprob_qes(args, qes=qes, model=model, tokenizer=tokenizer, with_validation=False)
+        log_difference = (logprob_with_validation - logprob).item()
         result.append({
             "dataset_idx": qes["question_idx"],
             "log_difference": log_difference
         })
-        count += 1
     
     # Now sort the results by log_difference from big to small
     result.sort(key=lambda x: -x["log_difference"])
@@ -221,39 +258,8 @@ def create_logdifference(args, questions):
     return result
 
 
-def main():
-    args = arg_parser()
-    print('*****************************')
-    print(args)
-    print('*****************************')
-    
-    set_random_seed(args.random_seed)
-    
-    dataloader = create_dataloader(args)
-    
-    if args.dataset_size > 1000:
-        dataloader = dataloader[:1000] # only take 1000 questions as selection scope, randomness decided by seed
-    print(f"Dataloader size: {len(dataloader)}")
-
-    if args.qes_limit == 0:
-        args.qes_limit = len(dataloader)
-    
-    start = time.time()
-    result = create_logdifference(args, dataloader)
-    end = time.time()
-    print('Total Execution Time: ', end - start, " seconds")
-    
-    # output the results
-    path = f"{args.output_dir}/logdifference_result_{args.dataset}_total_num_{args.qes_limit}.txt"
-    with open(path, 'w') as f:
-        try:
-            f.write(json.dumps(result, indent=4))
-        except:
-            pass
-
-
 def arg_parser():
-    parser = argparse.ArgumentParser(description="logdifference_calculation")
+    parser = argparse.ArgumentParser(description="logdifference_calculation_and_sort")
     parser.add_argument("--random_seed", type=int, default=1, help="random seed")
     parser.add_argument(
         "--dataset", type=str, default="gsm8k", choices=["gsm8k"], help="dataset to inference"
@@ -288,3 +294,7 @@ def arg_parser():
         raise ValueError("dataset is not properly defined ...")
     
     return args
+
+
+if __name__ == "__main__":
+    main()

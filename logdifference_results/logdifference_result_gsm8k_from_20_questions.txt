@@ -1,0 +1,82 @@
+[
+    {
+        "dataset_idx": 1458,
+        "log_difference": 5.646458625793457
+    },
+    {
+        "dataset_idx": 6312,
+        "log_difference": 1.5586180686950684
+    },
+    {
+        "dataset_idx": 5032,
+        "log_difference": 1.0764896869659424
+    },
+    {
+        "dataset_idx": 4307,
+        "log_difference": 0.8113926649093628
+    },
+    {
+        "dataset_idx": 5173,
+        "log_difference": 0.6901841163635254
+    },
+    {
+        "dataset_idx": 5189,
+        "log_difference": 0.40002870559692383
+    },
+    {
+        "dataset_idx": 7373,
+        "log_difference": 0.3222949504852295
+    },
+    {
+        "dataset_idx": 3248,
+        "log_difference": 0.16166889667510986
+    },
+    {
+        "dataset_idx": 4225,
+        "log_difference": 0.06673318147659302
+    },
+    {
+        "dataset_idx": 1770,
+        "log_difference": 0.01566159352660179
+    },
+    {
+        "dataset_idx": 3341,
+        "log_difference": 0.006241919472813606
+    },
+    {
+        "dataset_idx": 3457,
+        "log_difference": 0.005738154053688049
+    },
+    {
+        "dataset_idx": 1740,
+        "log_difference": -0.03675326704978943
+    },
+    {
+        "dataset_idx": 5862,
+        "log_difference": -0.10272026062011719
+    },
+    {
+        "dataset_idx": 4833,
+        "log_difference": -0.15578126907348633
+    },
+    {
+        "dataset_idx": 3620,
+        "log_difference": -0.33922505378723145
+    },
+    {
+        "dataset_idx": 1914,
+        "log_difference": -1.169187307357788
+    },
+    {
+        "dataset_idx": 6698,
+        "log_difference": -1.731581211090088
+    },
+    {
+        "dataset_idx": 4207,
+        "log_difference": -1.9930286407470703
+    },
+    {
+        "dataset_idx": 1258,
+        "log_difference": -3.6557857990264893
+    }
+]
