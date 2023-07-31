@@ -25,9 +25,9 @@ def main():
     
     dataloader = create_dataloader(args)
     
-    if args.dataset_size > 1000:
-        dataloader = dataloader[:1000] # only take 1000 questions as selection scope, randomness decided by seed
-    print(f"Dataloader size: {len(dataloader)}")
+    # if args.dataset_size > 1000:
+    #     dataloader = dataloader[:1000] # only take 1000 questions as selection scope, randomness decided by seed
+    # print(f"Dataloader size: {len(dataloader)}")
 
     if args.qes_limit == 0:
         args.qes_limit = len(dataloader)
@@ -274,7 +274,7 @@ def arg_parser():
         "--output_dir", type=str, default="./logdifference_results", help="output directory for logdifference results"
     )
     parser.add_argument(
-        "--qes_limit", type=int, default=10, help="whether to limit the size of training set. if 0, the training set is unlimited and we examine all the samples in the dataloader."
+        "--qes_limit", type=int, default=0, help="whether to limit the size of training set. if 0, the training set is unlimited and we examine all the samples in the dataloader."
     )
     
     args = parser.parse_args()

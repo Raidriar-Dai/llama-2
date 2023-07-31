@@ -7,5 +7,5 @@
 
 
 # Obtain logdifference results with Baichuan-13B-Chat
-python logdifference_calculation.py --dataset="gsm8k" --model="baichuan-inc/Baichuan-13B-Chat" --qes_limit=20 \
+python logdifference_calculation.py --dataset="gsm8k" --model="baichuan-inc/Baichuan-13B-Chat" --qes_limit=0 \
     --prompt_path="./validation_prompts/math_word_problems" --random_seed=42 --output_dir="./logdifference_results"
