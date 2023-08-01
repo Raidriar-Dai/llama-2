@@ -206,10 +206,10 @@ def generate_logprob_qes(args, qes, model, tokenizer, with_validation: bool):
     TODO: 检查 output_path, 并把先前已经选出的 (x_0, y_0) 作为 context 接入 prompt.'''
     if with_validation:
         prompt_text = create_input_prompt(args)
-        prompt_text += qes["question"] + "\nA: " + qes["answer"]    # No `.` after answer
+        prompt_text += "Q: " + qes["question"] + "\nA: " + qes["answer"]    # No `.` after answer
         logprob = calculate_logprob_ans(model, tokenizer, prompt_text)
     else:
-        prompt_text = qes["question"] + "\nA: " + qes["answer"]
+        prompt_text = "Q: " + qes["question"] + "\nA: " + qes["answer"]
         logprob = calculate_logprob_ans(model, tokenizer, prompt_text)
     
     return logprob
